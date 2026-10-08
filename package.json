@@ -1,0 +1,46 @@
+{
+  "name": "sticky-note",
+  "productName": "Sticky Note",
+  "version": "1.0.0",
+  "description": "Giay nho noi luon tren cung cho desktop (Electron)",
+  "main": "src/main/main.js",
+  "author": "Sticky Note",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "icon": "node tools/make-icon.js",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.local.stickynote",
+    "productName": "Sticky Note",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Sticky Note"
+    }
+  }
+}

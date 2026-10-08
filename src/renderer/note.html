@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' file:; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+    <title>Giấy nhớ</title>
+    <link rel="stylesheet" href="note.css" />
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div class="paper" id="paper" data-color="yellow">
+        <div class="sheen"></div>
+        <header class="bar" id="bar" title="Kéo để di chuyển · Nháy đúp để thu gọn">
+          <span class="clip" aria-hidden="true"></span>
+          <input class="title" id="title" placeholder="Tiêu đề…" spellcheck="false" />
+          <div class="tools">
+            <button class="tb" id="btnGhost" title="Chế độ mờ (Ctrl+Alt+G)">◍</button>
+            <button class="tb" id="btnPin" title="Luôn nổi trên cùng">⌖</button>
+            <button class="tb" id="btnMenu" title="Thêm">⋯</button>
+            <button class="tb danger" id="btnClose" title="Ẩn giấy nhớ">×</button>
+          </div>
+        </header>
+
+        <ul class="tasks" id="tasks"></ul>
+
+        <form class="add hidden" id="addRow">
+          <input
+            id="newTask"
+            placeholder="Việc mới… @mai 8h30 #nhà !2"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span class="preview" id="preview"></span>
+        </form>
+
+        <div class="quick" id="quick">
+          <button class="ghostbtn" id="btnQuick">＋ Thêm việc</button>
+        </div>
+
+        <textarea class="body" id="body" placeholder="Ghi chú tự do…" spellcheck="false"></textarea>
+
+        <footer class="foot">
+          <span class="count" id="count">0 việc</span>
+          <span class="grow"></span>
+          <button class="tb small" id="btnJustify" title="Dàn đều chữ">≡</button>
+          <button class="tb small" id="btnFontDown" title="Chữ nhỏ hơn">A−</button>
+          <button class="tb small" id="btnFontUp" title="Chữ lớn hơn">A+</button>
+          <span class="saved" id="saved"></span>
+        </footer>
+      </div>
+
+      <div class="rz rz-n" data-dir="n"></div>
+      <div class="rz rz-s" data-dir="s"></div>
+      <div class="rz rz-w" data-dir="w"></div>
+      <div class="rz rz-e" data-dir="e"></div>
+      <div class="rz rz-nw" data-dir="nw"></div>
+      <div class="rz rz-ne" data-dir="ne"></div>
+      <div class="rz rz-sw" data-dir="sw"></div>
+      <div class="rz rz-se" data-dir="se"></div>
+
+      <div class="toast" id="toast"></div>
+      <input class="picker" id="picker" type="datetime-local" />
+    </div>
+    <script src="../shared/dates.js"></script>
+    <script src="note.js"></script>
+  </body>
+</html>

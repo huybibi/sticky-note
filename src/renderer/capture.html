@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' file:; style-src 'self' 'unsafe-inline'"
+    />
+    <title>Ghi nhanh</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        user-select: none;
+      }
+      .box {
+        margin: 8px;
+        height: calc(100% - 16px);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        color: #2b2410;
+        background: linear-gradient(170deg, #fff8c9, #ffe873);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.12);
+      }
+      input {
+        border: 0;
+        background: transparent;
+        outline: none;
+        font-family: inherit;
+        font-size: 17px;
+        color: inherit;
+        width: 100%;
+      }
+      input::placeholder { color: rgba(43, 36, 16, 0.45); }
+      .hint {
+        font-size: 11.5px;
+        color: rgba(43, 36, 16, 0.62);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .pv { color: #a4661a; font-weight: 600; }
+      kbd {
+        background: rgba(0, 0, 0, 0.09);
+        border-radius: 4px;
+        padding: 0 4px;
+        font-family: inherit;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <input id="q" placeholder="Ghi nhanh việc… @mai 8h30 #nhà !2" spellcheck="false" />
+      <div class="hint">
+        <kbd>Enter</kbd><span>lưu</span>
+        <kbd>Esc</kbd><span>đóng</span>
+        <span class="pv" id="pv"></span>
+      </div>
+    </div>
+    <script src="../shared/dates.js"></script>
+    <script src="capture.js"></script>
+  </body>
+</html>
