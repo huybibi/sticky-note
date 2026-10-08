@@ -87,9 +87,12 @@ Ghi an toàn: nội dung mới ghi ra `sticky-note-data.json.tmp` rồi `rename`
 4. **Font hệ thống không lấy được từ renderer.** Electron 44 không có `navigator.queryLocalFonts` (kể cả khi bật `--enable-features=FontAccess`), nên main gọi PowerShell đọc danh sách font qua .NET/WPF và kiểm tra độ phủ dấu tiếng Việt bằng `CharacterToGlyphMap` (cmap thật của font). Kết quả chạy một lần rồi cache. Script được truyền bằng `-EncodedCommand` thay vì `-File` vì bản đóng gói nằm trong `app.asar` và PowerShell không đọc được file bên trong asar.
 5. **`font` trong dữ liệu có hai dạng.** Hoặc mã preset (`hand` / `ui` / `serif` / `mono`), hoặc tên font hệ thống (ví dụ `Verdana`). `fontStack()` trong `note.js` phân biệt hai dạng và luôn thêm `"Segoe UI", system-ui, sans-serif` làm chỗ dựa cho ký tự mà font được chọn thiếu.
 6. **Không thoát khi đóng hết cửa sổ.** `window-all-closed` để trống; app sống ở khay, thoát bằng mục **Thoát** trong menu khay.
+7. **Khởi động cùng Windows phải truyền `path` + `args`.** Windows chạy nguyên chuỗi trong `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, nên bản dev cần `args: [app.getAppPath()]` (thiếu thì chỉ mở `electron.exe` trần, không mở Sticky Note), bản đóng gói để `args: []`. Tên mục trong registry là AppUserModelID (`com.local.stickynote`), và `getLoginItemSettings()` **không** truyền `path`/`args` sẽ trả `false` dù mục đã có — muốn đọc đúng trạng thái phải truyền đúng cặp `path` + `args`. Lúc khởi động, app tự so lại registry với `settings.launchAtLogin` và ghi lại nếu lệch (đổi thư mục app, cài lại…).
 
 ## Dễ nhầm
 
 - Thư mục dữ liệu là `%APPDATA%\Sticky Note\` (theo `productName`), không phải `sticky-note`.
 - Preset `hand` (Segoe Print) và `serif` (Georgia) thiếu ký tự dấu tiếng Việt trên nhiều máy, nên dấu bị rơi sang font khác. Cửa sổ chọn font chỉ liệt kê font đủ dấu để tránh chuyện đó.
 - Cửa sổ chọn font không có IPC để mở từ renderer: chỉ mở được qua menu `⋯` → **Kiểu chữ** → **Chọn font trên máy…**.
+- Nếu file JSON bị hỏng, app **không** ghi đè ngay: bản lỗi được đổi tên thành `sticky-note-data.json.bad` rồi mới tạo dữ liệu mặc định. Giữ lại file `.bad` đó, nó là bản cuối cùng còn lại của dữ liệu cũ.
+- App chấp nhận file có BOM (bỏ BOM khi đọc), nhưng nếu tự sửa file bằng tay thì ghi **UTF-8 không BOM** — `Set-Content -Encoding UTF8` của PowerShell 5.1 thêm BOM và từng làm hỏng dữ liệu theo cách đó.

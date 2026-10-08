@@ -74,7 +74,7 @@ Mua sữa @mai 8h30 #nhà !2
 
 ## Dữ liệu
 
-Lưu tại `%APPDATA%\Sticky Note\sticky-note-data.json` (thư mục lấy theo `productName` trong `package.json`, nên tên là **Sticky Note** chứ không phải `sticky-note`). Ghi tạm ra `.tmp` rồi đổi tên, có debounce 350ms khi đang gõ. Mở nhanh bằng mục **Mở thư mục dữ liệu** trong menu khay.
+Lưu tại `%APPDATA%\Sticky Note\sticky-note-data.json` (thư mục lấy theo `productName` trong `package.json`, nên tên là **Sticky Note** chứ không phải `sticky-note`). Ghi tạm ra `.tmp` rồi đổi tên, có debounce 350ms khi đang gõ. Nếu file bị hỏng, bản lỗi được giữ lại thành `sticky-note-data.json.bad` trước khi app tạo lại dữ liệu mặc định. Mở nhanh bằng mục **Mở thư mục dữ liệu** trong menu khay.
 
 ## Cấu trúc mã
 

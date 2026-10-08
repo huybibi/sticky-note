@@ -45,14 +45,21 @@ function empty() {
 
 function load() {
   try {
-    const raw = fs.readFileSync(file(), 'utf8');
+    // bo BOM: file co the bi ghi boi trinh soan thao khac (PowerShell 5.1 them BOM)
+    const raw = fs.readFileSync(file(), 'utf8').replace(/^\uFEFF/, '');
     const parsed = JSON.parse(raw);
     cache = {
       version: 1,
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
       notes: Array.isArray(parsed.notes) ? parsed.notes : [],
     };
-  } catch {
+  } catch (err) {
+    // file chua co thi bo qua; file hong thi giu lai ban loi truoc khi ghi de
+    if (err.code !== 'ENOENT') {
+      try {
+        fs.renameSync(file(), file() + '.bad');
+      } catch {}
+    }
     cache = empty();
   }
   return cache;

@@ -348,6 +348,24 @@ function openFontWindow(id) {
   return win;
 }
 
+// ---------- khoi dong cung Windows ----------
+
+// Ban dong goi chay chinh file exe; ban dev phai truyen them duong dan app,
+// neu khong Windows chi mo electron.exe tran chu khong mo Sticky Note.
+function loginItemTarget() {
+  return app.isPackaged
+    ? { path: process.execPath, args: [] }
+    : { path: process.execPath, args: [app.getAppPath()] };
+}
+
+function loginItemEnabled() {
+  return app.getLoginItemSettings(loginItemTarget()).openAtLogin;
+}
+
+function setLoginItem(open) {
+  app.setLoginItemSettings({ ...loginItemTarget(), openAtLogin: open });
+}
+
 // ---------- tray ----------
 
 function buildTray() {
@@ -412,9 +430,9 @@ function refreshTray() {
       {
         label: 'Khởi động cùng Windows',
         type: 'checkbox',
-        checked: app.getLoginItemSettings().openAtLogin,
+        checked: loginItemEnabled(),
         click: (item) => {
-          app.setLoginItemSettings({ openAtLogin: item.checked, args: [] });
+          setLoginItem(item.checked);
           store.updateSettings({ launchAtLogin: item.checked });
         },
       },
@@ -484,8 +502,7 @@ function registerIpc() {
   ipcMain.handle('settings:set', (e, patch) => {
     const s = store.updateSettings(patch || {});
     if (patch && 'alwaysOnTop' in patch) keepOnTop();
-    if (patch && 'launchAtLogin' in patch)
-      app.setLoginItemSettings({ openAtLogin: !!patch.launchAtLogin, args: [] });
+    if (patch && 'launchAtLogin' in patch) setLoginItem(!!patch.launchAtLogin);
     refreshTray();
     return s;
   });
@@ -827,6 +844,8 @@ if (!app.requestSingleInstanceLock()) {
     buildTray();
 
     const db = store.read();
+    // dong bo lai voi Windows: muc Run co the lech sau khi doi duong dan app
+    if (loginItemEnabled() !== !!db.settings.launchAtLogin) setLoginItem(!!db.settings.launchAtLogin);
     if (!db.notes.length) addNote({ title: 'Việc hôm nay' }, false);
     else db.notes.forEach((n) => createNoteWindow(n, { activate: false }));
 
