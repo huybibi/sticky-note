@@ -152,6 +152,7 @@ function taskRow(task) {
 
   const line = document.createElement('div');
   line.className = 'line';
+  line.contentEditable = 'true';
   line.textContent = task.text || '';
   line.spellcheck = false;
   tx.append(line);

@@ -94,5 +94,6 @@ Ghi an toàn: nội dung mới ghi ra `sticky-note-data.json.tmp` rồi `rename`
 - Thư mục dữ liệu là `%APPDATA%\Sticky Note\` (theo `productName`), không phải `sticky-note`.
 - Preset `hand` (Segoe Print) và `serif` (Georgia) thiếu ký tự dấu tiếng Việt trên nhiều máy, nên dấu bị rơi sang font khác. Cửa sổ chọn font chỉ liệt kê font đủ dấu để tránh chuyện đó.
 - Cửa sổ chọn font không có IPC để mở từ renderer: chỉ mở được qua menu `⋯` → **Kiểu chữ** → **Chọn font trên máy…**.
+- Dòng việc (`.line`) là `contenteditable`: đó là cách sửa nội dung việc đã tạo. `html, body` đặt `user-select: none` nên `.line` phải tự mở lại `user-select: text`, thiếu dòng đó thì không đặt được con trỏ vào dòng dù đã bật `contenteditable`.
 - Nếu file JSON bị hỏng, app **không** ghi đè ngay: bản lỗi được đổi tên thành `sticky-note-data.json.bad` rồi mới tạo dữ liệu mặc định. Giữ lại file `.bad` đó, nó là bản cuối cùng còn lại của dữ liệu cũ.
 - App chấp nhận file có BOM (bỏ BOM khi đọc), nhưng nếu tự sửa file bằng tay thì ghi **UTF-8 không BOM** — `Set-Content -Encoding UTF8` của PowerShell 5.1 thêm BOM và từng làm hỏng dữ liệu theo cách đó.

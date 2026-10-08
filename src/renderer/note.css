@@ -241,6 +241,7 @@ body {
   text-align: left;
   min-height: 1.35em;
   cursor: text;
+  user-select: text;
 }
 .paper.justify .line { text-align: justify; text-justify: inter-word; }
 .line[contenteditable="true"]:empty::before { content: "việc mới…"; color: var(--ink-soft); }
