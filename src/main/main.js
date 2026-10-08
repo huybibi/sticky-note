@@ -639,6 +639,7 @@ function registerIpc() {
       due: parsed.due,
       priority: parsed.priority,
       tags: parsed.tags,
+      ord: (fresh.tasks || []).length,
       createdAt: Date.now(),
     };
     const fresh = store.getNote(note.id) || note;

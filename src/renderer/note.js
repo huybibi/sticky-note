@@ -112,16 +112,36 @@ function updateCount() {
 
 // ---------- danh sach viec ----------
 
+// thu tu cu (han -> uu tien -> ngay tao): giu lai de chuyen du lieu cu sang ord
+function legacyTaskCompare(a, b) {
+  const ad = a.due == null ? Infinity : a.due;
+  const bd = b.due == null ? Infinity : b.due;
+  if (ad !== bd) return ad - bd;
+  if ((b.priority || 0) !== (a.priority || 0)) return (b.priority || 0) - (a.priority || 0);
+  return (a.createdAt || 0) - (b.createdAt || 0);
+}
+
 function sortedTasks(list) {
   return [...list].sort((a, b) => {
     if (!!a.done !== !!b.done) return a.done ? 1 : -1;
     if (a.done && b.done) return (b.doneAt || 0) - (a.doneAt || 0);
-    const ad = a.due == null ? Infinity : a.due;
-    const bd = b.due == null ? Infinity : b.due;
-    if (ad !== bd) return ad - bd;
-    if ((b.priority || 0) !== (a.priority || 0)) return (b.priority || 0) - (a.priority || 0);
-    return (a.createdAt || 0) - (b.createdAt || 0);
+    // viec chua xong: thu tu tay dat (ord) len truoc, han/uu tien chi de hoa giai du lieu cu
+    const ao = typeof a.ord === 'number' ? a.ord : 0;
+    const bo = typeof b.ord === 'number' ? b.ord : 0;
+    if (ao !== bo) return ao - bo;
+    return legacyTaskCompare(a, b);
   });
+}
+
+// cap ord cho viec chua co: lay max hien co + 1 cho tung viec theo thu tu hien thi hien tai.
+// vi sortedTasks xep viec chua-co-ord truoc viec co-ord, "thu tu hien thi" luc nay chinh la
+// thu tu cu (han -> uu tien -> ngay tao) nen mo app len lan dau danh sach khong bi dao.
+
+function nextOrd() {
+  const list = note.tasks || [];
+  let m = -1;
+  for (const t of list) if (typeof t.ord === 'number' && t.ord > m) m = t.ord;
+  return m + 1;
 }
 
 function priorityLabel(p) {
@@ -139,6 +159,14 @@ function taskRow(task) {
   const li = document.createElement('li');
   li.className = 'task' + (task.done ? ' done' : '') + (task.priority ? ' p' + task.priority : '');
   li.dataset.id = task.id;
+
+  // tay cam de keo doi thu tu (viec da xong thi an di: nhom xong van xep theo gio tick)
+  const grip = document.createElement('span');
+  grip.className = 'grip';
+  grip.textContent = '⋮⋮';
+  grip.title = 'Kéo để đổi thứ tự (hoặc Alt+↑/↓ khi đang gõ trong dòng)';
+  grip.draggable = true;
+  li.append(grip);
 
   const chk = document.createElement('button');
   chk.className = 'chk';
@@ -199,7 +227,21 @@ function taskRow(task) {
   return li;
 }
 
+function normalizeTasks() {
+  const list = note.tasks || [];
+  const missing = sortedTasks(list.filter((t) => typeof t.ord !== 'number'));
+  if (!missing.length) return false;
+  let m = -1;
+  for (const t of list) if (typeof t.ord === 'number' && t.ord > m) m = t.ord;
+  for (const t of missing) {
+    m += 1;
+    t.ord = m;
+  }
+  return true;
+}
+
 function renderTasks(focusId) {
+  if (normalizeTasks()) queueSave({ tasks: note.tasks });
   UI.tasks.textContent = '';
   for (const task of sortedTasks(note.tasks || [])) UI.tasks.append(taskRow(task));
   updateCount();
@@ -235,6 +277,7 @@ function addTask(text, parsed) {
     due: p.due,
     priority: p.priority,
     tags: p.tags,
+    ord: nextOrd(),
     createdAt: Date.now(),
   };
   if (!task.text && task.due == null) return null;
@@ -260,6 +303,48 @@ function toggleTask(id) {
   queueSave({ tasks: note.tasks });
   renderTasks();
   if (task.done) toast('Xong: ' + task.text);
+}
+
+// doi cho ord cua viec voi viec ke tren/duoi trong nhom chua xong (Alt+Arrow)
+function moveTask(id, dir) {
+  const order = sortedTasks(note.tasks || []).filter((t) => !t.done);
+  const i = order.findIndex((t) => t.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= order.length) return false;
+  const tmp = order[i].ord;
+  order[i].ord = order[j].ord;
+  order[j].ord = tmp;
+  queueSave({ tasks: note.tasks });
+  renderTasks(id);
+  return true;
+}
+
+// tha viec keo vao vi tri moi: chi xep trong nhom (chua xong/xong) cua no,
+// tha sang nhom kia thi roi ve cuoi nhom cua minh. danh lai ord lien tu 0 tren toan bo.
+function dropTask(dragId, targetId, after) {
+  const dragged = findTask(dragId);
+  if (!dragged || dragged.done) return false;
+  const sameGroup = (t) => !t.done;
+  const group = sortedTasks(note.tasks || []).filter((t) => sameGroup(t) && t.id !== dragId);
+  let idx = group.length;
+  const target = targetId ? findTask(targetId) : null;
+  if (target && sameGroup(target)) {
+    idx = group.findIndex((t) => t.id === targetId) + (after ? 1 : 0);
+  }
+  group.splice(idx, 0, dragged);
+  const others = sortedTasks(note.tasks || []).filter((t) => !sameGroup(t));
+  [...group, ...others].forEach((t, i) => {
+    t.ord = i;
+  });
+  queueSave({ tasks: note.tasks });
+  renderTasks();
+  return true;
+}
+
+function clearDropIndicator() {
+  UI.tasks.querySelectorAll('.drop-before, .drop-after, .dragging').forEach((el) => {
+    el.classList.remove('drop-before', 'drop-after', 'dragging');
+  });
 }
 
 function updatePreview() {
@@ -496,7 +581,7 @@ async function handleMenu() {
       body: note.body,
       justify: note.justify,
       fontScale: note.fontScale,
-      tasks: note.tasks.map((t) => ({ ...t, id: newId(), done: false, notified: false })),
+      tasks: note.tasks.map((t, i) => ({ ...t, id: newId(), ord: i, done: false, notified: false })),
     });
     toast('Đã nhân đôi giấy nhớ');
   } else if (action === 'show') {
@@ -644,6 +729,12 @@ function bindTaskEvents() {
     const task = findTask(line.closest('.task').dataset.id);
     if (!task) return;
 
+    if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      moveTask(task.id, e.key === 'ArrowUp' ? -1 : 1);
+      return;
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       line.textContent = line.textContent.trim();
@@ -682,6 +773,68 @@ function bindTaskEvents() {
     },
     true
   );
+
+  // ---------- keo-tha doi thu tu ----------
+  let dragId = null;
+
+  UI.tasks.addEventListener('dragstart', (e) => {
+    const grip = e.target.closest && e.target.closest('.grip');
+    if (!grip) return;
+    const row = grip.closest('.task');
+    if (!row || row.classList.contains('done')) return;
+    dragId = row.dataset.id;
+    try {
+      e.dataTransfer.setData('text/plain', dragId);
+      e.dataTransfer.effectAllowed = 'move';
+    } catch {}
+    requestAnimationFrame(() => row.classList.add('dragging'));
+  });
+
+  UI.tasks.addEventListener('dragend', () => {
+    dragId = null;
+    clearDropIndicator();
+  });
+
+  UI.tasks.addEventListener('dragleave', (e) => {
+    const row = e.target.closest && e.target.closest('.task');
+    if (row) row.classList.remove('drop-before', 'drop-after');
+  });
+
+  UI.tasks.addEventListener('dragover', (e) => {
+    if (!dragId) return;
+    e.preventDefault();
+    try {
+      e.dataTransfer.dropEffect = 'move';
+    } catch {}
+    // tu cuon khi keo sat mep tren/duoi
+    const box = UI.tasks.getBoundingClientRect();
+    if (e.clientY - box.top < 28) UI.tasks.scrollTop -= 14;
+    else if (box.bottom - e.clientY < 28) UI.tasks.scrollTop += 14;
+    const row = e.target.closest && e.target.closest('.task');
+    UI.tasks.querySelectorAll('.drop-before, .drop-after').forEach((el) => {
+      if (el !== row) el.classList.remove('drop-before', 'drop-after');
+    });
+    if (!row || row.dataset.id === dragId) return;
+    const r = row.getBoundingClientRect();
+    const after = e.clientY - r.top > r.height / 2;
+    row.classList.toggle('drop-before', !after);
+    row.classList.toggle('drop-after', after);
+  });
+
+  UI.tasks.addEventListener('drop', (e) => {
+    if (!dragId) return;
+    e.preventDefault();
+    const row = e.target.closest && e.target.closest('.task');
+    let after = true;
+    if (row) {
+      const r = row.getBoundingClientRect();
+      after = e.clientY - r.top > r.height / 2;
+    }
+    const id = dragId;
+    dragId = null;
+    clearDropIndicator();
+    dropTask(id, row ? row.dataset.id : null, after);
+  });
 }
 
 // ---------- khoi dong ----------

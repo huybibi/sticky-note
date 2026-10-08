@@ -23,6 +23,7 @@ Yêu cầu: Node.js 18+ và Windows (đã kiểm thử trên Windows 10/11).
 
 **Việc & hạn**
 - Thêm việc nhanh, sửa nội dung trực tiếp, tick xong, xoá từng việc, xoá hết việc đã xong.
+- Đổi thứ tự: rê chuột vào dòng việc hiện tay cầm `⋮⋮` rồi kéo-thả; hoặc đặt con trỏ trong dòng và bấm `Alt+↑`/`Alt+↓`. Thứ tự do bạn đặt được lưu lại, việc tick xong vẫn chìm xuống dưới.
 - Việc có hạn hiện chip `⏰` (đổi màu theo mức gần hạn/quá hạn); bấm chip để chọn hạn khác, `Shift+click` để bỏ hạn.
 - Ưu tiên `!1`/`!2`/`!3` hiện chip và tô đậm mức ưu tiên; thẻ việc có lớp `p1..p3`.
 - Thông báo desktop khi việc tới hạn.
