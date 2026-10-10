@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('sticky', {
     ghost: (on) => ipcRenderer.invoke('win:ghost', on),
     compact: () => ipcRenderer.invoke('win:compact'),
     opacity: (v) => ipcRenderer.send('win:opacity', v),
+    autoGrow: (overflow, reset) => ipcRenderer.send('win:auto-grow', { overflow, reset }),
     dragStart: () => ipcRenderer.send('win:drag-start'),
     dragMove: (dx, dy) => ipcRenderer.send('win:drag-move', { dx, dy }),
     dragEnd: () => ipcRenderer.send('win:drag-end'),

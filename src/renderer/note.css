@@ -360,6 +360,7 @@ body {
 .body {
   flex: 1 1 auto;
   min-height: 26px;
+  max-height: none;
   margin: 0 6px 4px;
   padding: 4px 2px;
   border: 0;
@@ -367,13 +368,20 @@ body {
   background: transparent;
   resize: none;
   outline: none;
+  overflow-y: hidden;
   color: inherit;
   font-family: inherit;
   font-size: calc(var(--fs) - 1px);
   line-height: 1.55;
   text-align: left;
-  overflow-y: auto;
   user-select: text;
+}
+/* ghi chu qua dai: cua so da cham tran man hinh thi cho o ghi chu cuon tiep,
+   dong thoi khong cho de len phan viec (giay co dan, khong phai de len) */
+.body.capped {
+  flex: 1 1 auto;
+  min-height: 60px;
+  overflow-y: auto;
 }
 .paper.justify .body { text-align: justify; }
 .body::placeholder { color: var(--ink-soft); }

@@ -86,6 +86,54 @@ function toast(text) {
   toastTimer = setTimeout(() => UI.toast.classList.remove('show'), 1600);
 }
 
+// ---------- tu co gian cua so theo o ghi chu ----------
+
+let fitTimer = null;
+let fitting = false;
+let lastFitKey = '';
+let fitGen = 0;
+let lastReqHeight = 0;
+
+// Do chieu cao noi dung that cua o ghi chu roi nho main doi chieu cao cua so
+// (giu dinh tren, dai xuong duoi). Cach do: ha textarea ve 'auto' de
+// scrollHeight = chieu cao noi dung that, chieu cao muon co = scrollHeight +
+// phan lech hien tai giua textarea va cua so (vien, tieu de, viec, chan...).
+// Gui con so tuyet doi nay len main (khong phai so tang/giam tuong doi), main
+// chi doi bounds chu khong cham vao DOM nen khong gay vong lap.
+function fitBodyToContent() {
+  if (!note || note.compact) return;
+  if (fitting) return;
+  fitting = true;
+  try {
+    const winH = window.innerHeight;
+    const before = UI.body.clientHeight;
+    UI.body.style.height = 'auto';
+    const content = UI.body.scrollHeight;
+    const chrome = Math.max(0, winH - before);
+    const want = Math.ceil(content + chrome);
+    const key = UI.body.value.length + ':' + content + 'x' + winH;
+    if (want !== lastReqHeight) {
+      lastReqHeight = want;
+      lastFitKey = key;
+      UI.body.style.height = content + 'px';
+      api.window.autoGrow(want, false);
+    } else if (key !== lastFitKey) {
+      lastFitKey = key;
+      UI.body.style.height = content + 'px';
+    }
+  } finally {
+    fitting = false;
+  }
+}
+
+function queueFit() {
+  clearTimeout(fitTimer);
+  const gen = ++fitGen;
+  fitTimer = setTimeout(() => {
+    if (gen === fitGen) fitBodyToContent();
+  }, 120);
+}
+
 // ---------- hien thi ----------
 
 function applyAppearance() {
@@ -99,6 +147,7 @@ function applyAppearance() {
   document.documentElement.style.setProperty('--font-hand', fontStack(note.font));
   UI.title.value = note.title || '';
   if (UI.body.value !== (note.body || '')) UI.body.value = note.body || '';
+  queueFit();
   UI.btnPin.classList.toggle('on', !!settings.alwaysOnTop);
   UI.btnGhost.classList.toggle('on', !!note.ghost);
   if (typeof note.opacity === 'number' && note.opacity < 0.999) api.window.opacity(note.opacity);
@@ -595,7 +644,22 @@ async function handleMenu() {
 
 function bindEvents() {
   UI.title.addEventListener('input', () => queueSave({ title: UI.title.value }));
-  UI.body.addEventListener('input', () => queueSave({ body: UI.body.value }));
+  UI.body.addEventListener('input', () => {
+    queueSave({ body: UI.body.value });
+    queueFit();
+  });
+  // sau khi nguoi dung keo tay xong: lay chieu cao tay lam "san" cho tu gian
+  // (reset=true chi luu, khong doi bounds), roi do lai mot luot cho khop.
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (!note || note.compact) return;
+      api.window.autoGrow(0, true);
+      lastReqHeight = Math.round(window.innerHeight);
+      queueFit();
+    }, 250);
+  });
 
   UI.bar.addEventListener('dblclick', (e) => {
     if (isControl(e.target)) return;
@@ -628,16 +692,19 @@ function bindEvents() {
   UI.btnJustify.addEventListener('click', () => {
     queueSave({ justify: note.justify === false });
     applyAppearance();
+    queueFit();
   });
 
   UI.btnFontUp.addEventListener('click', () => {
     queueSave({ fontScale: Math.min(1.6, (note.fontScale || 1) + 0.08) });
     applyAppearance();
+    queueFit();
   });
 
   UI.btnFontDown.addEventListener('click', () => {
     queueSave({ fontScale: Math.max(0.7, (note.fontScale || 1) - 0.08) });
     applyAppearance();
+    queueFit();
   });
 
   UI.btnQuick.addEventListener('click', () => openAddRow(true));
@@ -671,6 +738,17 @@ function bindEvents() {
   bindWindowHandles();
 
   api.onChanged(async (payload) => {
+    if (payload.grown != null) {
+      // main vua doi (hoac giu) chieu cao cua so theo o ghi chu: dong bo lai
+      // textarea voi khong gian that, cham tran man hinh thi cho cuon trong o.
+      // khong goi queueFit o day: fit da xong truoc khi gui len main, goi lai chi
+      // gay vong resize (resize -> fit -> autoGrow -> grown -> fit...).
+      UI.body.classList.toggle('capped', !!payload.capped);
+      UI.body.style.height = 'auto';
+      if (!payload.capped) UI.body.style.height = UI.body.scrollHeight + 'px';
+      else UI.body.style.height = '';
+      return;
+    }
     if (!payload.settled) return;
     if (payload.font) {
       // font duoc chon tu cua so "font tren may" -> cap nhat ngay, tranh ghi de khi flushSave
@@ -848,6 +926,7 @@ async function boot() {
   applyAppearance();
   renderTasks();
   bindEvents();
+  fitBodyToContent();
   setInterval(checkDue, 30000);
   checkDue();
   if (!note.tasks.length) openAddRow(true);

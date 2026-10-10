@@ -617,6 +617,40 @@ function registerIpc() {
   ipcMain.on('win:drag-end', (e) => endLive(e, 'move'));
   ipcMain.on('win:resize-end', (e) => endLive(e, 'resize'));
 
+  // tu co gian theo o ghi chu: renderer gui chieu cao cua so muon co (so tuyet doi),
+  // main doi bounds (giu dinh tren, dai xuong duoi), kep trong man hinh.
+  // chieu cao tay nguoi dung tu keo luon duoc nho lam "san" (stored.height): tu gian
+  // khong bao gio co cua so xuong duoi san do (nguoi dung keo hep lai thi san ha theo).
+  ipcMain.on('win:auto-grow', (e, { overflow, reset }) => {
+    const win = BrowserWindow.fromWebContents(e.sender);
+    if (!win || win.isDestroyed()) return;
+    const entry = [...noteWins.entries()].find(([, w]) => w === win);
+    const stored = entry ? store.getNote(entry[0]) : null;
+    if (stored && stored.compact) return;
+    const b = win.getBounds();
+    if (reset) {
+      if (entry) store.updateNote(entry[0], { height: b.height });
+      e.sender.send('note:changed', { grown: b.height });
+      return;
+    }
+    const want = Math.round(Number(overflow) || 0);
+    if (!want) {
+      e.sender.send('note:changed', { grown: b.height });
+      return;
+    }
+    const area = displayFor(b).workArea;
+    const maxH = Math.max(MIN_H, area.height - (b.y - area.y) - 20);
+    const minH = Math.max(MIN_H, Math.min(b.height, stored?.height ?? b.height));
+    const next = Math.min(maxH, Math.max(minH, want));
+    if (Math.abs(next - b.height) < 2) {
+      e.sender.send('note:changed', { grown: b.height, capped: next >= maxH });
+      return;
+    }
+    win.setBounds({ x: b.x, y: b.y, width: b.width, height: Math.round(next) });
+    // khong luu height tu gian vao store: giu lai chieu cao tay nguoi dung lam "san"
+    e.sender.send('note:changed', { grown: Math.round(next), capped: next >= maxH });
+  });
+
   ipcMain.on('app:notify', (e, { title, body }) => {
     if (!Notification.isSupported()) return;
     new Notification({ title: title || 'Sticky Note', body: body || '', icon: ICON }).show();

@@ -29,7 +29,7 @@ Yêu cầu: Node.js 18+ và Windows (đã kiểm thử trên Windows 10/11).
 - Thông báo desktop khi việc tới hạn.
 
 **Ghi chú**
-- Ô ghi chú tự do bên dưới danh sách việc.
+- Ô ghi chú tự do bên dưới danh sách việc; gõ dài thì **cửa sổ tự cao theo** (không còn thanh cuộn), chạm trần màn hình mới cuộn trong ô.
 - Dàn đều chữ, tăng/giảm cỡ chữ, đổi kiểu chữ (Viết tay / Nét mảnh / Có chân / Đánh máy), đổi màu giấy, đổi độ mờ (100/90/80/65%).
 - Chọn font có sẵn trên máy: `⋯` → **Kiểu chữ** → **Chọn font trên máy…** mở cửa sổ liệt kê font đã cài kèm ô tìm kiếm; mỗi font hiện tên và một câu tiếng Việt xem trước (Đi ăn sáng rồi về làm bài tập, nhớ mua sữa nhé.) để thấy ngay dấu hiển thị thế nào. Danh sách **chỉ gồm font đủ dấu tiếng Việt**, font thiếu dấu bị loại bỏ. Font đang dùng được đánh dấu `✓`, bấm một font để áp dụng ngay cho giấy nhớ đang mở.
 - Chế độ mờ (ghost): giấy nhớ mờ 22% và cho chuột xuyên qua, chỉ còn viền mờ để tham chiếu.
